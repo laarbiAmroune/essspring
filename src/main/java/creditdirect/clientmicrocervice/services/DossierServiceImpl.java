@@ -527,15 +527,35 @@ public boolean deleteFileByDossierIdAndFileName(Long dossierId, String fileName)
 
     @Override
     @Transactional
-    public void setStatusToAccepter(Long dossierId) {
-        Dossier dossier = dossierRepository.findById(dossierId)
-                .orElseThrow(() -> new RuntimeException("Dossier not found with ID: " + dossierId));
+    public void setStatusToAccepter(Long idDossier, Long idCompte, String comment) {
+        Dossier dossier = dossierRepository.findById(idDossier).orElse(null);
+        Compte compte = compteRepository.findById(idCompte).orElseThrow(() -> new RuntimeException("Compte not found with id: " + idCompte));
 
-        // Update dossier status to ACCEPTER
-        dossier.setStatus(DossierStatus.ACCEPTER);
+        if (dossier != null) {
+            dossier.setStatus(DossierStatus.ACCEPTER);
 
-        // Save the updated dossier
-        dossierRepository.save(dossier);
+            // Save the updated dossier with the new status
+            dossierRepository.save(dossier);
+
+            // Check if comment is provided and save it to Commentaire entity
+            if (comment != null && !comment.isEmpty()) {
+                Commentaire commentaire = new Commentaire();
+                commentaire.setDossier(dossier);
+                // Set only the content of the comment
+                commentaire.setComment(comment);
+                commentaire.setStatus(dossier.getStatus());
+                commentaire.setCommentDate(LocalDateTime.now());
+
+                // Set the associated Compte
+                commentaire.setCompte(compte);
+
+                // Save the comment
+                commentaireRepository.save(commentaire);
+            }
+        } else {
+            throw new RuntimeException("Dossier not found with id: " + idDossier);
+        }
+
     }
 
 

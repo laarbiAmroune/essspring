@@ -63,6 +63,6 @@ public interface DossierService {
     void updateStatusToRenvoyer(Long idDossier, Long idCompte, String comment);
 
 
-    void setStatusToAccepter(Long dossierId);
+    void setStatusToAccepter(Long idDossier, Long idCompte, String comment);
     void setStatusToRefuser(Long dossierId);
 }

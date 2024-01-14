@@ -201,12 +201,24 @@ System.out.println(fileName);
     /////////////////////////////////////////
     ////////////////////update status //////////////
     //////////////////////////////////    put mehodes /////////
-    @PutMapping("/{dossierId}/accept")
-    public ResponseEntity<String> setDossierStatusToAccepter(@PathVariable Long dossierId) {
-        System.out.print(dossierId);
-        dossierService.setStatusToAccepter(dossierId);
-        return ResponseEntity.ok("Dossier status set to ACCEPTER successfully.");
+    @PostMapping("/{idDossier}/AccepterDossier/{idCompte}")
+    public ResponseEntity<String> setStatusToAccepter(
+            @PathVariable Long idDossier,
+            @PathVariable Long idCompte,
+            @RequestBody(required = false) String comment) {
+
+        try {
+            // Call the service method to update Dossier and Commentaire
+            dossierService.setStatusToAccepter(idDossier, idCompte, comment);
+
+            // If no exception is thrown, everything is successful
+            return ResponseEntity.ok("Dossier and Commentaire updated successfully");
+        } catch (Exception e) {
+            // Handle exceptions
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }
     }
+
 
     @PutMapping("/{dossierId}/refuse")
     public ResponseEntity<String> setDossierStatusToRefuser(@PathVariable Long dossierId) {
