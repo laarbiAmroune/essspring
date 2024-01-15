@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
+
 @Service
 public class FileStorageService {
 
@@ -36,6 +38,7 @@ public class FileStorageService {
     public List<AttachedFile> storeFilesForDossier(MultipartFile[] files, Long dossierId) {
         List<AttachedFile> attachedFiles = new ArrayList<>();
         Path dossierDirectory = this.fileStorageLocation.resolve(String.valueOf(dossierId));
+
 
         if (!Files.exists(dossierDirectory)) {
             try {
@@ -58,7 +61,7 @@ public class FileStorageService {
                 Files.copy(file.getInputStream(), Paths.get(filePath));
                 AttachedFile attachedFile = new AttachedFile();
                 attachedFile.setFileName(fileName);
-                attachedFile.setFilePath(filePath);
+                attachedFile.setFilePath(getRelativePath(filePath)); // Use relative path
                 attachedFile.setFileType("pdf"); // Ensure file type is set to "pdf"
 
                 attachedFiles.add(attachedFile);
@@ -68,6 +71,17 @@ public class FileStorageService {
         }
 
         return attachedFiles;
+    }
+
+    private String getRelativePath(String filePath) {
+        String fileStorageLocationString = fileStorageLocation.toString();
+
+        if (filePath.startsWith(fileStorageLocationString)) {
+            return filePath.substring(fileStorageLocationString.length());
+        } else {
+            // Handle the case where the provided filePath does not start with fileStorageLocation
+            return filePath;
+        }
     }
 
     private String addPdfExtension(String fileNameOrPath) {

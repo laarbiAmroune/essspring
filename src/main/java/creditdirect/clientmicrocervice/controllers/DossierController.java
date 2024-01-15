@@ -201,30 +201,33 @@ System.out.println(fileName);
     /////////////////////////////////////////
     ////////////////////update status //////////////
     //////////////////////////////////    put mehodes /////////
-    @PostMapping("/{idDossier}/AccepterDossier/{idCompte}")
-    public ResponseEntity<String> setStatusToAccepter(
+    @PutMapping("/{idDossier}/accept/{idCompte}")
+    public ResponseEntity<String> setDossierStatusToAccepter(
             @PathVariable Long idDossier,
             @PathVariable Long idCompte,
             @RequestBody(required = false) String comment) {
+        // Log the dossierId for debugging purposes
+        System.out.print(idDossier);
 
-        try {
-            // Call the service method to update Dossier and Commentaire
-            dossierService.setStatusToAccepter(idDossier, idCompte, comment);
+        // Set the dossier status to ACCEPTER and save the comment if provided
+        dossierService.setStatusToAccepter(idDossier, comment, idCompte);
 
-            // If no exception is thrown, everything is successful
-            return ResponseEntity.ok("Dossier and Commentaire updated successfully");
-        } catch (Exception e) {
-            // Handle exceptions
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
-        }
+        // Return a success response
+        return ResponseEntity.ok("Dossier status set to ACCEPTER successfully.");
     }
 
+    @PutMapping("/{dossierId}/refuse/{idCompte}")
+    public ResponseEntity<String> setDossierStatusToRefuser(
+            @PathVariable Long dossierId,
+            @PathVariable Long idCompte,
+            @RequestBody(required = false) String comment) {
+        // Set the dossier status to REFUSER and save the comment if provided
+        dossierService.setStatusToRefuser(dossierId, comment, idCompte);
 
-    @PutMapping("/{dossierId}/refuse")
-    public ResponseEntity<String> setDossierStatusToRefuser(@PathVariable Long dossierId) {
-        dossierService.setStatusToRefuser(dossierId);
+        // Return a success response
         return ResponseEntity.ok("Dossier status set to REFUSER successfully.");
     }
+
 
 
     @PutMapping("/{idDossier}/RenvoyerDossier/{idCompte}")
@@ -244,7 +247,6 @@ System.out.println(fileName);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }
     }
-
     @PutMapping("/{dossierId}/mark-as-traitee")
     public void markDossierAsTraitee(@PathVariable Long dossierId) {
         System.out.println((dossierId));

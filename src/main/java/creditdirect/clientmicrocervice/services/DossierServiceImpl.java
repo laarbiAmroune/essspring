@@ -216,22 +216,7 @@ public class DossierServiceImpl implements DossierService {
        Dossier dossier = dossierRepository.findById(dossierId)
                .orElseThrow(() -> new RuntimeException("Dossier not found with id: " + dossierId));
 
-       List<AttachedFile> attachedFiles = dossier.getAttachedFiles(); // Get existing attached files
-
-       // Add ".pdf" to the end of each file name and file path
-       for (AttachedFile attachedFile : attachedFiles) {
-           // File Name
-           String originalFileName = attachedFile.getFileName();
-           if (!originalFileName.endsWith(".pdf")) {
-               attachedFile.setFileName(originalFileName + ".pdf");
-           }
-
-           // File Path
-           String originalFilePath = attachedFile.getFilePath();
-           if (!originalFilePath.endsWith(".pdf")) {
-               attachedFile.setFilePath(originalFilePath + ".pdf");
-           }
-       }
+       List<AttachedFile> attachedFiles = dossier.getAttachedFiles();
 
        // Store the new files and retrieve AttachedFile objects
        List<AttachedFile> newAttachedFiles = fileStorageService.storeFilesForDossier(files, dossierId);
@@ -247,6 +232,7 @@ public class DossierServiceImpl implements DossierService {
 
        return dossierRepository.save(dossier);
    }
+
     @Override
     public Long getSingleAgenceIdByParticulierId(Long particulierId) {
         Particulier particulier = particulierRepository.findById(particulierId).orElse(null);
@@ -392,10 +378,14 @@ public class DossierServiceImpl implements DossierService {
         dossierRepository.saveAll(dossiersToUpdate);
     }
 
-
+////////////////////////////////////////////////
+    //////////////////////////
 
     @Autowired
     private CommentaireRepository commentaireRepository;
+
+
+
     @Override
     public void updateStatusToRenvoyer(Long idDossier, Long idCompte, String comment) {
         Dossier dossier = dossierRepository.findById(idDossier).orElse(null);
@@ -527,41 +517,51 @@ public boolean deleteFileByDossierIdAndFileName(Long dossierId, String fileName)
 
     @Override
     @Transactional
-    public void setStatusToAccepter(Long idDossier, Long idCompte, String comment) {
-        Dossier dossier = dossierRepository.findById(idDossier).orElse(null);
-        Compte compte = compteRepository.findById(idCompte).orElseThrow(() -> new RuntimeException("Compte not found with id: " + idCompte));
+    public void setStatusToAccepter(Long idDossier, String comment, Long idCompte) {
+        // Retrieve the dossier by its ID
+        Dossier dossier = dossierRepository.findById(idDossier)
+                .orElseThrow(() -> new RuntimeException("Dossier not found with ID: " + idDossier));
 
-        if (dossier != null) {
-            dossier.setStatus(DossierStatus.ACCEPTER);
+        // Update dossier status to ACCEPTER
+        dossier.setStatus(DossierStatus.ACCEPTER);
 
-            // Save the updated dossier with the new status
-            dossierRepository.save(dossier);
+        // Save the updated dossier with the new status
+        dossierRepository.save(dossier);
 
-            // Check if comment is provided and save it to Commentaire entity
-            if (comment != null && !comment.isEmpty()) {
-                Commentaire commentaire = new Commentaire();
-                commentaire.setDossier(dossier);
-                // Set only the content of the comment
-                commentaire.setComment(comment);
-                commentaire.setStatus(dossier.getStatus());
-                commentaire.setCommentDate(LocalDateTime.now());
+        // Check if a comment is provided and save it to the Commentaire entity
+        if (comment != null && !comment.isEmpty()) {
+            // Create a new Commentaire instance
+            Commentaire commentaire = new Commentaire();
 
-                // Set the associated Compte
-                commentaire.setCompte(compte);
+            // Set the dossier for the comment
+            commentaire.setDossier(dossier);
 
-                // Save the comment
-                commentaireRepository.save(commentaire);
-            }
-        } else {
-            throw new RuntimeException("Dossier not found with id: " + idDossier);
+            // Set only the content of the comment
+            commentaire.setComment(comment);
+
+            // Set the status of the comment to the current dossier status
+            commentaire.setStatus(dossier.getStatus());
+
+            // Set the comment date to the current date and time
+            commentaire.setCommentDate(LocalDateTime.now());
+
+            // Retrieve the associated Compte by its ID
+            Compte compte = compteRepository.findById(idCompte)
+                    .orElseThrow(() -> new RuntimeException("Compte not found with ID: " + idCompte));
+
+            // Set the associated Compte for the comment
+            commentaire.setCompte(compte);
+
+            // Save the comment to the database
+            commentaireRepository.save(commentaire);
         }
-
     }
 
 
     @Override
     @Transactional
-    public void setStatusToRefuser(Long dossierId) {
+    public void setStatusToRefuser(Long dossierId, String comment, Long idCompte) {
+        // Retrieve the dossier by its ID
         Dossier dossier = dossierRepository.findById(dossierId)
                 .orElseThrow(() -> new RuntimeException("Dossier not found with ID: " + dossierId));
 
@@ -570,5 +570,34 @@ public boolean deleteFileByDossierIdAndFileName(Long dossierId, String fileName)
 
         // Save the updated dossier
         dossierRepository.save(dossier);
+
+        // Check if a comment is provided and save it to the Commentaire entity
+        if (comment != null && !comment.isEmpty()) {
+            // Create a new Commentaire instance
+            Commentaire commentaire = new Commentaire();
+
+            // Set the dossier for the comment
+            commentaire.setDossier(dossier);
+
+            // Set only the content of the comment
+            commentaire.setComment(comment);
+
+            // Set the status of the comment to the current dossier status
+            commentaire.setStatus(dossier.getStatus());
+
+            // Set the comment date to the current date and time
+            commentaire.setCommentDate(LocalDateTime.now());
+
+            // Retrieve the associated Compte by its ID
+            Compte compte = compteRepository.findById(idCompte)
+                    .orElseThrow(() -> new RuntimeException("Compte not found with ID: " + idCompte));
+
+            // Set the associated Compte for the comment
+            commentaire.setCompte(compte);
+
+            // Save the comment to the database
+            commentaireRepository.save(commentaire);
+        }
     }
+
 }
