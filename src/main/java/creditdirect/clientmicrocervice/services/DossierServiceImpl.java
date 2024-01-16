@@ -651,5 +651,10 @@ public boolean deleteFileByDossierIdAndFileName(Long dossierId, String fileName)
         }
     }
 
+    public class InvalidFileException extends RuntimeException {
+        public InvalidFileException(String message) {
+            super(message);
+        }
+    }
 
 }

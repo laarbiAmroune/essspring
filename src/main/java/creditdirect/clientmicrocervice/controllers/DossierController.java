@@ -63,22 +63,28 @@ public class DossierController {
         return ResponseEntity.ok(addedDossier);
     }
 /////////////////////update dossier add files/////////////////////////
-    @PostMapping("/{dossierId}/files")
-    public ResponseEntity<Dossier> updateFilesForDossier(
-            @PathVariable Long dossierId,
-            @RequestParam("files") MultipartFile[] files
-    ) {
-
+@PostMapping("/{dossierId}/files")
+public ResponseEntity<?> updateFilesForDossier(
+        @PathVariable Long dossierId,
+        @RequestParam("files") MultipartFile[] files
+) {
+    try {
         System.out.print(dossierId);
-
         System.out.print("adding files");
+
         Dossier updatedDossier = dossierService.updateFilesForDossier(dossierId, files);
         return ResponseEntity.ok(updatedDossier);
+    } catch (DossierServiceImpl.DossierNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Dossier not found with ID: " + dossierId);
+    } catch (DossierServiceImpl.InvalidFileException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid file(s) provided.");
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request");
     }
+}
 
 
-
-//////////////////////////////// asign dossiers to courtier///////////////////
+    //////////////////////////////// asign dossiers to courtier///////////////////
     @PostMapping("/assign-dossier/{dossierId}/to-courtier/{courtierId}")
     public ResponseEntity<Dossier> assignDossierToCourtier(@PathVariable Long dossierId, @PathVariable Long courtierId) {
         Dossier assignedDossier = dossierService.assignDossierToCourtier(dossierId, courtierId);
