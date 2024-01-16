@@ -68,6 +68,10 @@ public class DossierController {
             @PathVariable Long dossierId,
             @RequestParam("files") MultipartFile[] files
     ) {
+
+        System.out.print(dossierId);
+
+        System.out.print("adding files");
         Dossier updatedDossier = dossierService.updateFilesForDossier(dossierId, files);
         return ResponseEntity.ok(updatedDossier);
     }
