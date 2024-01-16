@@ -46,21 +46,12 @@ import javax.servlet.Filter;
 
 public class SecurityConfig {
 
-    @Bean
-    public static PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-    @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
    @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http.authorizeRequests().anyRequest().permitAll();
-        http.csrf().disable();
-
+        http.authorizeHttpRequests(requests->requests.anyRequest().permitAll());
+        http.csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable());//.disable();
         return http.build();
     }
 

@@ -377,6 +377,27 @@ public class DossierServiceImpl implements DossierService {
         dossiersToUpdate.forEach(dossier -> dossier.setStatus(DossierStatus.TRAITEE));
         dossierRepository.saveAll(dossiersToUpdate);
     }
+    @Override
+    // New method to update status to "ACCEPTER"
+    public void updateDossiersStatusToAccepter(List<Long> dossierIds) {
+        List<Dossier> dossiersToUpdate = dossierRepository.findAllById(dossierIds);
+        dossiersToUpdate.forEach(dossier -> dossier.setStatus(DossierStatus.ACCEPTER));
+        dossierRepository.saveAll(dossiersToUpdate);
+    }
+    @Override
+    // New method to update status to "REFUSER"
+    public void updateDossiersStatusToRefuser(List<Long> dossierIds) {
+        List<Dossier> dossiersToUpdate = dossierRepository.findAllById(dossierIds);
+        dossiersToUpdate.forEach(dossier -> dossier.setStatus(DossierStatus.REFUSER));
+        dossierRepository.saveAll(dossiersToUpdate);
+    }
+    @Override
+    // New method to update status to "RENVOYER"
+    public void updateDossiersStatusToRenvoyer(List<Long> dossierIds) {
+        List<Dossier> dossiersToUpdate = dossierRepository.findAllById(dossierIds);
+        dossiersToUpdate.forEach(dossier -> dossier.setStatus(DossierStatus.RENVOYER));
+        dossierRepository.saveAll(dossiersToUpdate);
+    }
 
 ////////////////////////////////////////////////
     //////////////////////////
@@ -420,6 +441,8 @@ public class DossierServiceImpl implements DossierService {
 
 
     }
+
+
 
 
     @Override
@@ -487,26 +510,6 @@ public boolean deleteFileByDossierIdAndFileName(Long dossierId, String fileName)
 
         return dossierRepository.findAllByAssignedagence(assignedAgence);
     }
-
-    @Override
-    public void updateDossierStatusDirector_ACCEPTED(Long dossierId) {
-        Optional<Dossier> dossierOptional = dossierRepository.findById(dossierId);
-        dossierOptional.ifPresent(dossier -> {
-            dossier.setStatus(DossierStatus.ACCEPTER);
-            dossierRepository.save(dossier);
-        });
-    }
-
-    @Override
-    public void updateDossierStatusDirector_REFUSE(Long dossierId) {
-        Optional<Dossier> dossierOptional = dossierRepository.findById(dossierId);
-        dossierOptional.ifPresent(dossier -> {
-            dossier.setStatus(DossierStatus.REFUSER);
-            dossierRepository.save(dossier);
-        });
-    }
-
-
     private static final String BASE_UPLOAD_DIR = "C:/Users/user/lastbanklend/CreditDirectbackend/ClientMicrocervice/src/main/resources/uploaded-files/";
 
     @Override
@@ -515,89 +518,138 @@ public boolean deleteFileByDossierIdAndFileName(Long dossierId, String fileName)
         return Files.readAllBytes(filePath);
     }
 
+
     @Override
     @Transactional
-    public void setStatusToAccepter(Long idDossier, String comment, Long idCompte) {
-        // Retrieve the dossier by its ID
-        Dossier dossier = dossierRepository.findById(idDossier)
-                .orElseThrow(() -> new RuntimeException("Dossier not found with ID: " + idDossier));
+    public void setDossiersStatusToAccepter(List<Long> dossierIds, String comment, Long idCompte) {
+        for (Long idDossier : dossierIds) {
+            try {
+                // Retrieve the dossier by its ID
+                Dossier dossier = dossierRepository.findById(idDossier)
+                        .orElseThrow(() -> new RuntimeException("Dossier not found with ID: " + idDossier));
 
-        // Update dossier status to ACCEPTER
-        dossier.setStatus(DossierStatus.ACCEPTER);
+                // Update dossier status to ACCEPTER
+                dossier.setStatus(DossierStatus.ACCEPTER);
 
-        // Save the updated dossier with the new status
-        dossierRepository.save(dossier);
+                // Save the updated dossier with the new status
+                dossierRepository.save(dossier);
 
-        // Check if a comment is provided and save it to the Commentaire entity
-        if (comment != null && !comment.isEmpty()) {
-            // Create a new Commentaire instance
-            Commentaire commentaire = new Commentaire();
+                // Perform any additional operations such as saving comments, auditing, etc.
+                // ...
 
-            // Set the dossier for the comment
-            commentaire.setDossier(dossier);
-
-            // Set only the content of the comment
-            commentaire.setComment(comment);
-
-            // Set the status of the comment to the current dossier status
-            commentaire.setStatus(dossier.getStatus());
-
-            // Set the comment date to the current date and time
-            commentaire.setCommentDate(LocalDateTime.now());
-
-            // Retrieve the associated Compte by its ID
-            Compte compte = compteRepository.findById(idCompte)
-                    .orElseThrow(() -> new RuntimeException("Compte not found with ID: " + idCompte));
-
-            // Set the associated Compte for the comment
-            commentaire.setCompte(compte);
-
-            // Save the comment to the database
-            commentaireRepository.save(commentaire);
+                // Optionally, you can log each dossier ID for debugging purposes
+                System.out.println("Dossier status set to ACCEPTER for ID: " + idDossier);
+            } catch (RuntimeException e) {
+                // Log or handle the exception as needed
+                String errorMessage = "Error processing dossier with ID: " + idDossier + ". " + e.getMessage();
+                System.err.println(errorMessage);
+                throw new RuntimeException(errorMessage);
+            } catch (Exception e) {
+                // Log or handle other exceptions
+                String errorMessage = "Unexpected error processing dossier with ID: " + idDossier + ". " + e.getMessage();
+                System.err.println(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
         }
     }
 
 
+
     @Override
     @Transactional
-    public void setStatusToRefuser(Long dossierId, String comment, Long idCompte) {
-        // Retrieve the dossier by its ID
-        Dossier dossier = dossierRepository.findById(dossierId)
-                .orElseThrow(() -> new RuntimeException("Dossier not found with ID: " + dossierId));
+    public void setDossiersStatusToRefuser(List<Long> dossierIds, String comment, Long idCompte) {
+        for (Long idDossier : dossierIds) {
+            try {
+                // Retrieve the dossier by its ID
+                Dossier dossier = dossierRepository.findById(idDossier)
+                        .orElseThrow(() -> new RuntimeException("Dossier not found with ID: " + idDossier));
 
-        // Update dossier status to REFUSER
-        dossier.setStatus(DossierStatus.REFUSER);
+                // Update dossier status to REFUSER
+                dossier.setStatus(DossierStatus.REFUSER);
 
-        // Save the updated dossier
-        dossierRepository.save(dossier);
+                // Save the updated dossier with the new status
+                dossierRepository.save(dossier);
 
-        // Check if a comment is provided and save it to the Commentaire entity
-        if (comment != null && !comment.isEmpty()) {
-            // Create a new Commentaire instance
-            Commentaire commentaire = new Commentaire();
+                // Perform any additional operations such as saving comments, auditing, etc.
+                // ...
 
-            // Set the dossier for the comment
-            commentaire.setDossier(dossier);
-
-            // Set only the content of the comment
-            commentaire.setComment(comment);
-
-            // Set the status of the comment to the current dossier status
-            commentaire.setStatus(dossier.getStatus());
-
-            // Set the comment date to the current date and time
-            commentaire.setCommentDate(LocalDateTime.now());
-
-            // Retrieve the associated Compte by its ID
-            Compte compte = compteRepository.findById(idCompte)
-                    .orElseThrow(() -> new RuntimeException("Compte not found with ID: " + idCompte));
-
-            // Set the associated Compte for the comment
-            commentaire.setCompte(compte);
-
-            // Save the comment to the database
-            commentaireRepository.save(commentaire);
+                // Optionally, you can log each dossier ID for debugging purposes
+                System.out.println("Dossier status set to REFUSER for ID: " + idDossier);
+            } catch (RuntimeException e) {
+                // Log or handle the exception as needed
+                String errorMessage = "Error processing dossier with ID: " + idDossier + ". " + e.getMessage();
+                System.err.println(errorMessage);
+                throw new RuntimeException(errorMessage);
+            } catch (Exception e) {
+                // Log or handle other exceptions
+                String errorMessage = "Unexpected error processing dossier with ID: " + idDossier + ". " + e.getMessage();
+                System.err.println(errorMessage);
+                throw new RuntimeException(errorMessage);
+            }
         }
     }
+
+
+    ///////////////////
+
+
+    @Override
+    @Transactional
+    public void addCommentToDossier(Long idDossier, String comment, Long idCompte) {
+        try {
+            // Retrieve the dossier by its ID
+            Dossier dossier = dossierRepository.findById(idDossier)
+                    .orElseThrow(() -> new DossierNotFoundException(idDossier));
+
+            // Check if a comment is provided and save it to the Commentaire entity
+            if (comment != null && !comment.isEmpty()) {
+                // Create a new Commentaire instance
+                Commentaire commentaire = new Commentaire();
+
+                // Set the dossier for the comment
+                commentaire.setDossier(dossier);
+
+                // Set only the content of the comment
+                commentaire.setComment(comment);
+
+                // Set the status of the comment to the current dossier status
+                commentaire.setStatus(dossier.getStatus());
+
+                // Set the comment date to the current date and time
+                commentaire.setCommentDate(LocalDateTime.now());
+
+                // Retrieve the associated Compte by its ID
+                Compte compte = compteRepository.findById(idCompte)
+                        .orElseThrow(() -> new CompteNotFoundException(idCompte));
+
+                // Set the associated Compte for the comment
+                commentaire.setCompte(compte);
+
+                // Save the comment to the database
+                commentaireRepository.save(commentaire);
+            }
+        } catch (DossierNotFoundException | CompteNotFoundException e) {
+            // Handle the custom exceptions
+            // You can log the error, send a specific response, or perform other error handling actions
+            e.printStackTrace(); // for demonstration, you may want to replace this with appropriate error handling
+        }
+    }
+
+
+
+    // Custom exception for dossier not found
+    public class DossierNotFoundException extends RuntimeException {
+        public DossierNotFoundException(Long id) {
+            super("Dossier not found with ID: " + id);
+        }
+    }
+
+    // Custom exception for compte not found
+    public class CompteNotFoundException extends RuntimeException {
+        public CompteNotFoundException(Long id) {
+            super("Compte not found with ID: " + id);
+        }
+    }
+
 
 }

@@ -9,10 +9,12 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CompteRepository extends JpaRepository<Compte, Long> {
 
+    public Compte findByNin(String nin);
 
 
 
-    Compte findByNin(String nin);
+
+
 
     boolean existsByNin(String nin);
 }

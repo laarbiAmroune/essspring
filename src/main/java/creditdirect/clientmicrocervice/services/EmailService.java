@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.util.UUID;
+
+
 
 
 @Service
@@ -137,43 +140,7 @@ public class EmailService {
         emailSender.send(mimeMessage);
     }
 
-    public void sendPasswordResetEmail(String email, String newPassword, String recipientEmail) {
-        MimeMessage mimeMessage = emailSender.createMimeMessage();
-
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-
-            helper.setTo(recipientEmail);
-            helper.setSubject("Password Reset");
-
-            String resetUrl = "http://localhost:8000/clients/reset-password?email=" + recipientEmail;
-
-            String htmlBody = "<html>"
-                    + "<head>"
-                    + "<title>Password Reset</title>"
-                    + "<style>"
-                    + "body { font-family: Arial, sans-serif; }"
-                    + "h2 { color: #0056b3; }"
-                    + "p { color: #333; }"
-                    + ".btn { display: inline-block; padding: 10px 20px; background-color: #0056b3; color: #fff; text-decoration: none; }"
-                    + "</style>"
-                    + "</head>"
-                    + "<body>"
-                    + "<h2>Password Reset</h2>"
-                    + "<p>Your new password is: <strong>" + newPassword + "</strong></p>"
-                    + "<p><a href='" + resetUrl + "' class='btn'>Reset your password</a></p>"
-                    + "</body></html>";
-
-            helper.setText(htmlBody, true); // Set the email body as HTML
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        }
-
-        // Send the email
-        emailSender.send(mimeMessage);
-    }
-    }
-
+}
 
 
 

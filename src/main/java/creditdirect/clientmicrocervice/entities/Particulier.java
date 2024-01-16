@@ -1,7 +1,10 @@
 package creditdirect.clientmicrocervice.entities;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -9,6 +12,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @PrimaryKeyJoinColumn(name = "particulier_id")
 public class Particulier extends Client {
 
@@ -46,7 +51,6 @@ public class Particulier extends Client {
     @Column(name = "created_at", updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
-
 
     @Column(name = "updated_at")
     @UpdateTimestamp

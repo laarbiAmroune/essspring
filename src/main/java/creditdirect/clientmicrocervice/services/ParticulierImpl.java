@@ -2,47 +2,35 @@ package creditdirect.clientmicrocervice.services;
 
 
 import creditdirect.clientmicrocervice.entities.Particulier;
-import creditdirect.clientmicrocervice.repositories.ParticulierRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ParticulierImpl implements ParticulierService {
-
-
-    @Autowired
-    private ParticulierRepository particulierRepository;
-
+    @Override
+    public List<Particulier> getAllParticuliers() {
+        return null;
+    }
 
     @Override
-    public Particulier updateParticulier(Long id, Particulier updatedParticulier) {
-        Optional<Particulier> optionalParticulier = particulierRepository.findById(id);
+    public Particulier getParticulierById(Long id) {
+        return null;
+    }
 
-        if (optionalParticulier.isPresent()) {
-            Particulier existingParticulier = optionalParticulier.get();
+    @Override
+    public Particulier createParticulier(Particulier particulier) {
+        return null;
+    }
 
-            // Mettez à jour les propriétés nécessaires de existingParticulier avec les valeurs de updatedParticulier
-            existingParticulier.setNom(updatedParticulier.getNom());
-            existingParticulier.setPrenom(updatedParticulier.getPrenom());
-            existingParticulier.setTelephone(updatedParticulier.getTelephone());
-            existingParticulier.setNationalite(updatedParticulier.getNationalite());
-            existingParticulier.setAdresse(updatedParticulier.getAdresse());
-            existingParticulier.setVille(updatedParticulier.getVille());
-            existingParticulier.setCodePostal(updatedParticulier.getCodePostal());
-            existingParticulier.setResidesInAlgeria(updatedParticulier.isResidesInAlgeria());
-            existingParticulier.setCommune(updatedParticulier.getCommune());
+    @Override
+    public Particulier updateParticulier(Long id, Particulier particulier) {
+        return null;
+    }
 
-            // Ajoutez d'autres propriétés à mettre à jour...
+    @Override
+    public void deleteParticulier(Long id) {
 
-            return particulierRepository.save(existingParticulier);
-        } else {
-            // Gérer le cas où le particulier n'est pas trouvé
-            // Vous pouvez lever une exception, renvoyer null ou prendre d'autres mesures
-            throw new RuntimeException("Particulier non trouvé avec l'ID : " + id);
-        }
     }
 
 

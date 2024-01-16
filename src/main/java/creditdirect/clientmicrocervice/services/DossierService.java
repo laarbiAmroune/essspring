@@ -38,8 +38,6 @@ public interface DossierService {
 
     void updateDossierStatusToTraitee(Long dossierId);
 
-
-
     Dossier addDossier(Dossier dossier);
 
     void updateDossiersStatusToTraitee(List<Long> dossierIds);
@@ -51,18 +49,31 @@ public interface DossierService {
 
 
     List<Dossier> getAllDossiersByAgence(Long assignedAgence);
-
-
-    void updateDossierStatusDirector_ACCEPTED(Long dossierId);
-
-    void updateDossierStatusDirector_REFUSE(Long dossierId);
     byte[] downloadFileByDossierIdAndFileName(Long dossierId, String fileName) throws IOException;
 
 
+    // New method to update status to "ACCEPTER"
+    void updateDossiersStatusToAccepter(List<Long> dossierIds);
+
+    // New method to update status to "REFUSER"
+    void updateDossiersStatusToRefuser(List<Long> dossierIds);
+
+    // New method to update status to "RENVOYER"
+    void updateDossiersStatusToRenvoyer(List<Long> dossierIds);
 
     void updateStatusToRenvoyer(Long idDossier, Long idCompte, String comment);
 
 
-    void setStatusToAccepter(Long idDossier, String comment, Long idCompte);
-    void setStatusToRefuser(Long idDossier, String comment, Long idCompte);
+
+
+
+
+
+    @Transactional
+    void addCommentToDossier(Long idDossier, String comment, Long idCompte);
+
+    @Transactional
+    void setDossiersStatusToAccepter(List<Long> dossierIds, String comment, Long idCompte);
+
+    void setDossiersStatusToRefuser(List<Long> dossierIds, String comment, Long idCompte);
 }

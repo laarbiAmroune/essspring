@@ -3,21 +3,18 @@ import creditdirect.clientmicrocervice.config.FileStorageProperties;
 import creditdirect.clientmicrocervice.entities.Dossier;
 import creditdirect.clientmicrocervice.kafka.KafkaProducer;
 import creditdirect.clientmicrocervice.services.DossierService;
+import creditdirect.clientmicrocervice.services.DossierServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,13 +27,13 @@ import java.util.List;
 @RequestMapping("/dossiers")
 public class DossierController {
 
-    private final KafkaProducer kafkaProducer;
+
     private final DossierService dossierService;
 
     @Autowired
-    public DossierController(DossierService dossierService,KafkaProducer kafkaProducer) {
+    public DossierController(DossierService dossierService) {
         this.dossierService = dossierService;
-        this.kafkaProducer = kafkaProducer;
+
     }
 ///////////////get all dossiers////////////////////
     @GetMapping("/all")
@@ -145,19 +142,6 @@ System.out.println(fileName);
         }
 
         return ResponseEntity.ok(dossiers);
-
-    }
-
-
-
-    @PutMapping("/{dossierId}/mark-as-ACCEPTER")
-    public void markDossierAsACCEPTER(@PathVariable Long dossierId) {
-        dossierService.updateDossierStatusDirector_ACCEPTED(dossierId);
-    }
-
-    @PutMapping("/{dossierId}/mark-as-REFUSE")
-    public void markDossierAsREFUSE(@PathVariable Long dossierId) {
-        dossierService.updateDossierStatusDirector_ACCEPTED(dossierId);
     }
 
 
@@ -201,52 +185,9 @@ System.out.println(fileName);
     /////////////////////////////////////////
     ////////////////////update status //////////////
     //////////////////////////////////    put mehodes /////////
-    @PutMapping("/{idDossier}/accept/{idCompte}")
-    public ResponseEntity<String> setDossierStatusToAccepter(
-            @PathVariable Long idDossier,
-            @PathVariable Long idCompte,
-            @RequestBody(required = false) String comment) {
-        // Log the dossierId for debugging purposes
-        System.out.print(idDossier);
-
-        // Set the dossier status to ACCEPTER and save the comment if provided
-        dossierService.setStatusToAccepter(idDossier, comment, idCompte);
-
-        // Return a success response
-        return ResponseEntity.ok("Dossier status set to ACCEPTER successfully.");
-    }
-
-    @PutMapping("/{dossierId}/refuse/{idCompte}")
-    public ResponseEntity<String> setDossierStatusToRefuser(
-            @PathVariable Long dossierId,
-            @PathVariable Long idCompte,
-            @RequestBody(required = false) String comment) {
-        // Set the dossier status to REFUSER and save the comment if provided
-        dossierService.setStatusToRefuser(dossierId, comment, idCompte);
-
-        // Return a success response
-        return ResponseEntity.ok("Dossier status set to REFUSER successfully.");
-    }
 
 
 
-    @PutMapping("/{idDossier}/RenvoyerDossier/{idCompte}")
-    public ResponseEntity<String> updateStatusToRenvoyer(
-            @PathVariable Long idDossier,
-            @PathVariable Long idCompte,
-            @RequestBody(required = false) String comment) {
-
-        try {
-            // Call the service method to update Dossier and Commentaire
-            dossierService.updateStatusToRenvoyer(idDossier, idCompte, comment);
-
-            // If no exception is thrown, everything is successful
-            return ResponseEntity.ok("Dossier and Commentaire updated successfully");
-        } catch (Exception e) {
-            // Handle exceptions
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
-        }
-    }
     @PutMapping("/{dossierId}/mark-as-traitee")
     public void markDossierAsTraitee(@PathVariable Long dossierId) {
         System.out.println((dossierId));
@@ -262,4 +203,61 @@ System.out.println(fileName);
     ) {
         return dossierService.getAcceptedAndRejectedDossiersByCourtier(courtierId);
     }
+
+    /////////////////
+    @PostMapping("/{id}/addComment")
+    public ResponseEntity<String> addCommentToDossier(
+            @PathVariable("id") Long idDossier,
+            @RequestBody(required = false) String comment,
+            @RequestParam Long idCompte) {
+
+        try {
+            dossierService.addCommentToDossier(idDossier, comment, idCompte);
+            return ResponseEntity.ok().build();
+        } catch (DossierServiceImpl.DossierNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Dossier not found with ID: " + idDossier);
+        } catch (DossierServiceImpl.CompteNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Compte not found with ID: " + idCompte);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request");
+        }
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleException(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
+    }
+
+
+
+    @PostMapping("/updateStatusToAccepter")
+    public ResponseEntity<String> updateDossiersStatusToAccepter(@RequestBody List<Long> dossierIds) {
+        try {
+            dossierService.updateDossiersStatusToAccepter(dossierIds);
+            return ResponseEntity.ok("Dossiers status updated to ACCEPTER");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating dossier status to ACCEPTER");
+        }
+    }
+
+    @PostMapping("/updateStatusToRefuser")
+    public ResponseEntity<String> updateDossiersStatusToRefuser(@RequestBody List<Long> dossierIds) {
+        try {
+            dossierService.updateDossiersStatusToRefuser(dossierIds);
+            return ResponseEntity.ok("Dossiers status updated to REFUSER");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating dossier status to REFUSER");
+        }
+    }
+
+    @PostMapping("/updateStatusToRenvoyer")
+    public ResponseEntity<String> updateDossiersStatusToRenvoyer(@RequestBody List<Long> dossierIds) {
+        try {
+            dossierService.updateDossiersStatusToRenvoyer(dossierIds);
+            return ResponseEntity.ok("Dossiers status updated to RENVOYER");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating dossier status to RENVOYER");
+        }
+    }
+
 }

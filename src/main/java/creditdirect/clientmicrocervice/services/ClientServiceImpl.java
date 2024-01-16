@@ -1,27 +1,47 @@
 package creditdirect.clientmicrocervice.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import creditdirect.clientmicrocervice.entities.Client;
 import creditdirect.clientmicrocervice.entities.Commune;
 import creditdirect.clientmicrocervice.entities.Particulier;
 import creditdirect.clientmicrocervice.repositories.ClientRepository;
-import com.nimbusds.jose.*;
-
-import java.util.*;
-
 import creditdirect.clientmicrocervice.repositories.CommuneRepository;
 import creditdirect.clientmicrocervice.repositories.ParticulierRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
+import lombok.Builder;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.*;
+
+@RequiredArgsConstructor
 @Service
 public class ClientServiceImpl implements ClientService {
+
+    @Builder
+    @Data
+    static class RequestBody {
+        private String email;
+        private String password;
+    }
 
     private static final String SECRET_KEY = "ThisIsASecureSecretKeyWithAtLeast256BitsLength123456789012345678901234567890";
     // Replace with your actual secret key
@@ -31,12 +51,6 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    @Autowired
-    public ClientServiceImpl(ClientRepository clientRepository, BCryptPasswordEncoder passwordEncoder,EmailService emailService) {
-        this.clientRepository = clientRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.emailService = emailService;
-    }
 
 
     @Override
@@ -64,13 +78,58 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
+    public Client getClientFromRemote(String _email, String _password) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        RestTemplate template = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity httpEntity = new HttpEntity<>(
+                RequestBody
+                        .builder()
+                        .email(_email)
+                        .password(_password)
+                        .build(),
+                headers);
+        ResponseEntity<String> response = template.postForEntity(
+                //configService.getConfigs().get("centrale-url") + baseAPi
+                "http://localhost:8001/api/v1/client/auth"
+                , httpEntity
+                , String.class
+        );
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            String responseBody = response.getBody().toString();
+            //log.info(responseBody);
+            Map<String, Object> data = mapper.readValue(responseBody, Map.class);
+            Client client = Client.builder()
+                    .email(_email)
+                    .password(passwordEncoder.encode(_password))
+                    .build();
+            Particulier particulier = new Particulier();
+
+                    particulier.setAdresse((String) data.get("adress"));
+            particulier.setCivilite((String) data.get("civilite"));
+            particulier.setNationalite((String) data.get("nationalite"));
+            particulier.setNom((String) data.get("nom"));
+            particulier.setPrenom((String) data.get("prenom"));
+            particulier.setCodePostal((String)data.get("codePostal"));
+            particulier.setTelephone((String) data.get("telephone"));
+            particulier.setVille((String) data.get("ville"));
+            particulier.setPassword(passwordEncoder.encode(_password));
+
+            //particulier.setCommune(communeRepository.findByCodePostal((String)data.get("codePostal")));
+
+            particulierRepository.save(particulier);
+            clientRepository.save(client);
+        }
+
+        return null;
+    }
+
+    @Override
     public void deleteClient(Long id) {
         clientRepository.deleteById(id);
     }
-
-
-
-
 
 
     @Override
@@ -79,11 +138,12 @@ public class ClientServiceImpl implements ClientService {
         if (client != null && passwordEncoder.matches(password, client.getPassword())) {
 
 
-         return generateToken(client);
+            return generateToken(client);
         } else {
             return "Authentication failed";
         }
     }
+
     @Override
     public Map<String, Object> loginWithClientInfo(String email, String password) {
         try {
@@ -111,6 +171,7 @@ public class ClientServiceImpl implements ClientService {
             throw new RuntimeException("Internal server error", e);
         }
     }
+
     private String getClientType(Client client) {
         if (client instanceof Particulier) {
             return "Particulier";
@@ -149,6 +210,7 @@ public class ClientServiceImpl implements ClientService {
             return null;
         }
     }
+
     @Autowired
     private ParticulierRepository particulierRepository;
    /* @Override
@@ -196,12 +258,12 @@ public class ClientServiceImpl implements ClientService {
         // Save the Particulier first
         Particulier subscribedParticulier = particulierRepository.save(particulier);
 
-        emailService.sendConfirmationEmail(subscribedParticulier.getEmail(),generatedPassword);
+        emailService.sendConfirmationEmail(subscribedParticulier.getEmail(), generatedPassword);
 
         // Retrieve Commune based on postal code
         String postalCode = particulier.getCodePostal(); // Assuming you have a method to get postal code from Particulier
         Commune commune = communeRepository.findByCodePostal(postalCode);
-           System.out.println("postalCode postalCode: " + postalCode);
+        System.out.println("postalCode postalCode: " + postalCode);
 
         if (commune != null) {
             subscribedParticulier.setCommune(commune); // Associate Particulier with Commune
@@ -212,12 +274,6 @@ public class ClientServiceImpl implements ClientService {
             return null;
         }
     }
-
-
-
-
-
-
 
 
     /////////////// generate password ////////////////////////////
@@ -231,6 +287,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Autowired
     private CommuneRepository communeRepository;
+
     @Override
     public Client updateClientPassword(Long clientId, String password) {
         Optional<Client> optionalClient = clientRepository.findById(clientId);
@@ -258,31 +315,6 @@ public class ClientServiceImpl implements ClientService {
         client.setActivated(true);
         clientRepository.save(client);
     }
-
-
-    //////////////mot de passe oublier+envoi un mailavec un nouveux mot de passe //////////////
-
-    @Override
-    public void resetPasswordByEmail(String email) {
-        Client client = clientRepository.findByEmail(email);
-
-        if (client != null) {
-            // Générer un nouveau mot de passe
-            String newPassword = generateRandomPassword();
-            String hashedNewPassword = passwordEncoder.encode(newPassword);
-            client.setPassword(hashedNewPassword);
-
-            // Sauvegarder le client avec le nouveau mot de passe
-            clientRepository.save(client);
-
-            // Envoyer un e-mail avec le nouveau mot de passe
-            emailService.sendPasswordResetEmail(client.getEmail(), newPassword, client.getEmail());
-        } else {
-            throw new EntityNotFoundException("Client non trouvé avec l'e-mail : " + email);
-        }
-    }
-
-
 
 
 }

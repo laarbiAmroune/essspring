@@ -2,22 +2,22 @@ package creditdirect.clientmicrocervice.controllers;
 
 import creditdirect.clientmicrocervice.entities.Client;
 import creditdirect.clientmicrocervice.entities.Particulier;
-import creditdirect.clientmicrocervice.repositories.ClientRepository;
 import creditdirect.clientmicrocervice.services.ClientService;
 import creditdirect.clientmicrocervice.services.EmailService;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-
+@Slf4j
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/clients")
 public class ClientController {
@@ -25,12 +25,9 @@ public class ClientController {
     private final ClientService clientService;
     private final EmailService emailService;
 
-    @Autowired
-    public ClientController(ClientService clientService, EmailService emailService) {
-        this.clientService = clientService;
-        this.emailService=emailService;
-    }
-/////////////////get all client////////////////////////////
+    private final AuthenticationManager authManager;
+
+    /////////////////get all client////////////////////////////
     @GetMapping
     public ResponseEntity<List<Client>> getAllClients() {
         List<Client> clients = clientService.getAllClients();
@@ -44,51 +41,51 @@ public class ClientController {
                 new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-
-
     @PutMapping("/{id}")
     public ResponseEntity<Client> updateClient(@PathVariable("id") Long id, @RequestBody Client client) {
         Client updatedClient = clientService.updateClient(id, client);
         return updatedClient != null ? new ResponseEntity<>(updatedClient, HttpStatus.OK) :
                 new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
-/////////////////////////delete client///////////////////////
+
+    /////////////////////////delete client///////////////////////
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClient(@PathVariable("id") Long id) {
         clientService.deleteClient(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-////////////////////////client login/////////////////////////
-@PostMapping("/login")
-public ResponseEntity<?> loginWithClientInfo(@RequestBody Map<String, String> credentials) {
-    try {
+    ////////////////////////client login/////////////////////////
+    @PostMapping("/login")
+    public ResponseEntity<?> loginWithClientInfo(@RequestBody Map<String, String> credentials) {
+
         String email = credentials.get("email");
         String password = credentials.get("password");
 
         if (email == null || password == null) {
             return new ResponseEntity<>("Email or password missing", HttpStatus.BAD_REQUEST);
         }
+        try {
+            authManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+
+        } catch (Exception e) {
+            log.error("echec de connexion 1");
+            log.error(e.getMessage());
+            try {
+                clientService.getClientFromRemote(email, password);
+            } catch (Exception ex) {
+
+                log.error("echec de connexion 2");
+                log.error(ex.getMessage());
+                return new ResponseEntity<>("Authentication failed", HttpStatus.UNAUTHORIZED);
+            }
+        }
 
         Map<String, Object> authenticationResult = clientService.loginWithClientInfo(email, password);
+        return ResponseEntity.ok(authenticationResult);
 
-        if (authenticationResult.containsKey("error")) {
-            String errorMessage = (String) authenticationResult.get("error");
-
-            if ("Authentication failed".equals(errorMessage)) {
-                return new ResponseEntity<>(errorMessage, HttpStatus.UNAUTHORIZED);
-            } else {
-                return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
-            }
-        } else {
-            // Return client info and token in the response
-            return ResponseEntity.ok(authenticationResult);
-        }
-    } catch (Exception e) {
-        // Handle other exceptions if necessary
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
     }
-}
+
     ////////////encien loginnn
     @PostMapping("/login/encienne")
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
@@ -112,8 +109,7 @@ public ResponseEntity<?> loginWithClientInfo(@RequestBody Map<String, String> cr
     }
 
 
-
-//////////////////inscription particulier///////////////////////////
+    //////////////////inscription particulier///////////////////////////
     @PostMapping("/subscribe/particulier")
     public ResponseEntity<Particulier> subscribeParticulier(@RequestBody Particulier particulier) {
         Particulier subscribedParticulier = clientService.subscribeParticulier(particulier);
@@ -155,8 +151,6 @@ public ResponseEntity<?> loginWithClientInfo(@RequestBody Map<String, String> cr
 
         return ResponseEntity.status(HttpStatus.OK).body(htmlResponse);
     }*/
-
-
 
 
     /////////////////////////activer compte client via email////////////////////////////
@@ -280,20 +274,4 @@ public ResponseEntity<?> loginWithClientInfo(@RequestBody Map<String, String> cr
         emailService.sendanotherConfirmation(recipientEmail);
         return "Confirmation email sent to " + recipientEmail;
     }
-
-
-////////////////mot de passe oublier /////////////////
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPasswordByEmail(@RequestParam("email") String email) {
-        try {
-            clientService.resetPasswordByEmail(email);
-            return ResponseEntity.ok("Un e-mail de réinitialisation de mot de passe a été envoyé à l'adresse : " + email);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
-
-
-
 }
