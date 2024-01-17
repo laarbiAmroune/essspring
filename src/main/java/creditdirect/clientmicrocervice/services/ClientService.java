@@ -25,8 +25,11 @@ public interface ClientService {
 
     Particulier subscribeParticulier(Particulier particulier);
 
+    String generateRandomPassword();
+
     Client updateClientPassword(Long clientId, String newPassword);
     void activateClientByEmail(String email);
 
 
+    String sendConfirmationEmail(String recipientEmail);
 }

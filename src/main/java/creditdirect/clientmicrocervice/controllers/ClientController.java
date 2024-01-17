@@ -4,6 +4,7 @@ import creditdirect.clientmicrocervice.entities.Client;
 import creditdirect.clientmicrocervice.entities.Particulier;
 import creditdirect.clientmicrocervice.services.ClientService;
 import creditdirect.clientmicrocervice.services.EmailService;
+import creditdirect.clientmicrocervice.services.EncryptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,7 @@ public class ClientController {
     private final EmailService emailService;
 
     private final AuthenticationManager authManager;
+    private final EncryptionService encryptionService;
 
     /////////////////get all client////////////////////////////
     @GetMapping
@@ -157,7 +159,13 @@ public class ClientController {
     @GetMapping("/activate")
     public ResponseEntity<String> activateClientByEmail(@RequestParam("email") String email) {
         try {
-            clientService.activateClientByEmail(email);
+            //clientService.activateClientByEmail(email);
+
+
+            String decrypteemail = encryptionService.decrypt(email);
+            System.out.print("decrypteemail"+decrypteemail);
+
+            clientService.activateClientByEmail(decrypteemail);
 
             String htmlResponse = "<!DOCTYPE html>\n" +
                     "<html>\n" +
@@ -257,7 +265,7 @@ public class ClientController {
                     "<body>\n" +
                     "  <div class=\"card\">\n" +
                     "    <h1>Error</h1>\n" +
-                    "    <p>Activation for the account with email " + email + " has failed.</p>\n" +
+                    "    <p>Activation for the account  has failed.</p>\n" +
                     "    <p>Error: " + e.getMessage() + "</p>\n" +
                     "  </div>\n" +
                     "</body>\n" +
@@ -271,7 +279,6 @@ public class ClientController {
 
     @PostMapping("/send-confirmation-email")
     public String sendConfirmationEmail(@RequestParam("email") String recipientEmail) {
-        emailService.sendanotherConfirmation(recipientEmail);
-        return "Confirmation email sent to " + recipientEmail;
+        return clientService.sendConfirmationEmail(recipientEmail);
     }
 }

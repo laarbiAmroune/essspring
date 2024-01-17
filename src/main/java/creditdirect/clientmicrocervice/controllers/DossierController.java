@@ -35,7 +35,7 @@ public class DossierController {
         this.dossierService = dossierService;
 
     }
-///////////////get all dossiers////////////////////
+    ///////////////get all dossiers////////////////////
     @GetMapping("/all")
 
     public ResponseEntity<List<Dossier>> getAllDossiers() {
@@ -62,26 +62,16 @@ public class DossierController {
         Dossier addedDossier = dossierService.addDossier(dossier);
         return ResponseEntity.ok(addedDossier);
     }
-/////////////////////update dossier add files/////////////////////////
-@PostMapping("/{dossierId}/files")
-public ResponseEntity<?> updateFilesForDossier(
-        @PathVariable Long dossierId,
-        @RequestParam("files") MultipartFile[] files
-) {
-    try {
-        System.out.print(dossierId);
-        System.out.print("adding files");
-
+    /////////////////////update dossier add files/////////////////////////
+    @PostMapping("/{dossierId}/files")
+    public ResponseEntity<Dossier> updateFilesForDossier(
+            @PathVariable Long dossierId,
+            @RequestParam("files") MultipartFile[] files
+    ) {
         Dossier updatedDossier = dossierService.updateFilesForDossier(dossierId, files);
         return ResponseEntity.ok(updatedDossier);
-    } catch (DossierServiceImpl.DossierNotFoundException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Dossier not found with ID: " + dossierId);
-    } catch (DossierServiceImpl.InvalidFileException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid file(s) provided.");
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request");
     }
-}
+
 
 
     //////////////////////////////// asign dossiers to courtier///////////////////
@@ -91,20 +81,20 @@ public ResponseEntity<?> updateFilesForDossier(
         return ResponseEntity.ok(assignedDossier);
     }
 
-/////////////dossier agence non asignd
+    /////////////dossier agence non asignd
     @GetMapping("/{courtierAgenceId}/dossiersnotassigned")
     public List<Dossier> getDossiersForCourtier(@PathVariable Long courtierAgenceId) {
         return dossierService.getDossiersForCourtier(courtierAgenceId);
     }
 
 
-///////////// dossier en cours for courtiers
+    ///////////// dossier en cours for courtiers
     @GetMapping("/courtier/{courtierId}/Encours")
     public List<Dossier> getDossiersencoursForCourtier(@PathVariable Long courtierId) {
         return dossierService.getDossiersencoursForCourtier(courtierId);
     }
 
-/// dosiieers traitte par le courtier
+    /// dosiieers traitte par le courtier
     @GetMapping("/courtier/{courtierId}/traitee")
     public List<Dossier> getTraiteeDossiersByCourtierId(@PathVariable Long courtierId) {
         return dossierService.getTraiteeDossiersByCourtier(courtierId);
@@ -125,7 +115,7 @@ public ResponseEntity<?> updateFilesForDossier(
     public ResponseEntity<String> deleteFileFromDossier(
             @PathVariable Long dossierId,
             @PathVariable String fileName) {
-System.out.println(fileName);
+        System.out.println(fileName);
         boolean isDeleted = dossierService.deleteFileByDossierIdAndFileName(dossierId, fileName);
 
         if (isDeleted) {
@@ -215,15 +205,15 @@ System.out.println(fileName);
     }
 
     /////////////////
-    @PostMapping("/{id}/addComment")
+    @PostMapping("/{dossierId}/addComment/{compteId}")
     public ResponseEntity<String> addCommentToDossier(
-            @PathVariable("id") Long idDossier,
+            @PathVariable("dossierId") Long idDossier,
             @RequestBody(required = false) String comment,
-            @RequestParam Long idCompte) {
+            @PathVariable("compteId") Long idCompte) {
 
         try {
             dossierService.addCommentToDossier(idDossier, comment, idCompte);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok("Comment added successfully");
         } catch (DossierServiceImpl.DossierNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Dossier not found with ID: " + idDossier);
         } catch (DossierServiceImpl.CompteNotFoundException e) {
@@ -232,6 +222,7 @@ System.out.println(fileName);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request");
         }
     }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleException(Exception e) {

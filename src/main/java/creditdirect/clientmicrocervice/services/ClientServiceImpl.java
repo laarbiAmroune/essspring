@@ -277,7 +277,9 @@ public class ClientServiceImpl implements ClientService {
 
 
     /////////////// generate password ////////////////////////////
-    private String generateRandomPassword() {
+
+    @Override
+    public String generateRandomPassword() {
 
         String uuid = UUID.randomUUID().toString().replace("-", "");
 
@@ -316,5 +318,35 @@ public class ClientServiceImpl implements ClientService {
         clientRepository.save(client);
     }
 
+
+
+    @Override
+    public String sendConfirmationEmail(String recipientEmail) {
+        // Retrieve existing Client entity from the database
+        Client existingClient = clientRepository.findByEmail(recipientEmail);
+
+        if (existingClient == null) {
+            // Handle the case where the entity does not exist
+            return "Client not found for email: " + recipientEmail;
+        }
+
+        // Generate a random password
+        String generatedPassword = generateRandomPassword();
+        System.out.println("Generated password: " + generatedPassword);
+
+        // Hash the generated password
+        String hashedPassword = passwordEncoder.encode(generatedPassword);
+
+        // Update fields in the existing entity
+        existingClient.setPassword(hashedPassword);
+
+        // Save the updated entity
+        Client subscribedClient = clientRepository.save(existingClient);
+
+        // Send confirmation email
+        emailService.sendConfirmationEmail(subscribedClient.getEmail(), generatedPassword);
+
+        return "Confirmation email sent to " + recipientEmail;
+    }
 
 }

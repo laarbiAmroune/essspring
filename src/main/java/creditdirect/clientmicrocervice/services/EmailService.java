@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.web.util.UriComponentsBuilder;
+
 import java.util.UUID;
 
 
@@ -13,39 +15,50 @@ import java.util.UUID;
 
 @Service
 public class EmailService {
-
+    private final EncryptionService encryptionService;
     private final JavaMailSender emailSender;
 
-    public EmailService(JavaMailSender emailSender) {
-        this.emailSender = emailSender;
+    public EmailService(JavaMailSender emailSender ,EncryptionService encryptionService) {
+        this.emailSender = emailSender;  this.encryptionService = encryptionService;
     }
 
     public void sendConfirmationEmail(String recipientEmail, String password) {
 
 
         MimeMessage mimeMessage = emailSender.createMimeMessage();
-        String activationUrl = "http://localhost:8000/clients/activate?email=" + recipientEmail;
 
+
+        String encryptedEmail = encryptionService.encrypt(recipientEmail);
+        System.out.print(encryptedEmail);
+       // String activationUrl = "http://localhost:8000/clients/activate/"+encryptedEmail;
+        String activationUrl = "https://thin-laugh-production.up.railway.app/clients/activate?email=" + encryptedEmail;
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
             helper.setTo(recipientEmail);
             helper.setSubject("Subscription Confirmation");
 
+
+
             String htmlBody = "<html>"
                     + "<head>"
-                    + "<title>Subscription Confirmation</title>"
+                    + "<title>Confirmation d'inscription</title>"
                     + "<style>"
                     + "body { font-family: Arial, sans-serif; }"
                     + "h2 { color: #0056b3; }"
                     + "p { color: #333; }"
-                    + ".btn { display: inline-block; padding: 10px 20px; background-color: #0056b3; color: #fff; text-decoration: none; }"
+                    + ".btn { display: inline-block; padding: 10px 20px; background-color: #0056b3; color: #fff; text-decoration: none; border: none; border-radius: 5px; cursor: pointer; }"
+                    + ".btn:hover { background-color: #004080; }"  // Optional: Add hover effect
                     + "</style>"
                     + "</head>"
                     + "<body>"
-                    + "<h2>Thank you for subscribing!</h2>"
-                    + "<p>Your password is: <strong>" + password + "</strong></p>"
+                    + "<h2>Merci de votre inscription !</h2>"
+                    + "<p>Votre mot de passe est : <strong>" + password + "</strong></p>"
+                    + "<p><button class='btn' onclick=\"window.location.href='" + activationUrl + "'\">Activer votre compte</button></p>"
                     + "<p><a href='" + activationUrl + "' class='btn'>activate your compte</a></p>"
                     + "</body></html>";
+
+
+
 
 
 

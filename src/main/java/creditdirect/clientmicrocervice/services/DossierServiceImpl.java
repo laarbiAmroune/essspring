@@ -132,7 +132,7 @@ public class DossierServiceImpl implements DossierService {
                 .orElseThrow(() -> new RuntimeException("Client not found"));
         dossier.setClient(client);
 
-       if (client instanceof Particulier) {
+        if (client instanceof Particulier) {
             Particulier particulier = (Particulier) client;
             System.out.println("particulier ID: " + particulier);
             // Assuming particulierId is retrieved from somewhere, it's not defined in the given code
@@ -179,18 +179,18 @@ public class DossierServiceImpl implements DossierService {
 
 
 
-   /* @Override
-    public Dossier updateFilesForDossier(Long dossierId, MultipartFile[] files) {
-        Dossier dossier = dossierRepository.findById(dossierId)
-                .orElseThrow(() -> new RuntimeException("Dossier not found with id: " + dossierId));
+    /* @Override
+     public Dossier updateFilesForDossier(Long dossierId, MultipartFile[] files) {
+         Dossier dossier = dossierRepository.findById(dossierId)
+                 .orElseThrow(() -> new RuntimeException("Dossier not found with id: " + dossierId));
 
-        List<AttachedFile> attachedFiles = fileStorageService.storeFilesForDossier(files, dossierId);
-        dossier.setAttachedFiles(attachedFiles);
+         List<AttachedFile> attachedFiles = fileStorageService.storeFilesForDossier(files, dossierId);
+         dossier.setAttachedFiles(attachedFiles);
 
-        return dossierRepository.save(dossier);
-    }
-*/
-   // Service layer
+         return dossierRepository.save(dossier);
+     }
+ */
+    // Service layer
    /*@Override
    public Dossier updateFilesForDossier(Long dossierId, MultipartFile[] files) {
        Dossier dossier = dossierRepository.findById(dossierId)
@@ -212,26 +212,26 @@ public class DossierServiceImpl implements DossierService {
 
        return dossierRepository.save(dossier);
    }*/
-   public Dossier updateFilesForDossier(Long dossierId, MultipartFile[] files) {
-       Dossier dossier = dossierRepository.findById(dossierId)
-               .orElseThrow(() -> new RuntimeException("Dossier not found with id: " + dossierId));
+    public Dossier updateFilesForDossier(Long dossierId, MultipartFile[] files) {
+        Dossier dossier = dossierRepository.findById(dossierId)
+                .orElseThrow(() -> new RuntimeException("Dossier not found with id: " + dossierId));
 
-       List<AttachedFile> attachedFiles = dossier.getAttachedFiles();
+        List<AttachedFile> attachedFiles = dossier.getAttachedFiles();
 
-       // Store the new files and retrieve AttachedFile objects
-       List<AttachedFile> newAttachedFiles = fileStorageService.storeFilesForDossier(files, dossierId);
+        // Store the new files and retrieve AttachedFile objects
+        List<AttachedFile> newAttachedFiles = fileStorageService.storeFilesForDossier(files, dossierId);
 
-       // Add the new AttachedFile objects to the existing list
-       if (attachedFiles == null) {
-           attachedFiles = new ArrayList<>();
-       }
-       attachedFiles.addAll(newAttachedFiles);
+        // Add the new AttachedFile objects to the existing list
+        if (attachedFiles == null) {
+            attachedFiles = new ArrayList<>();
+        }
+        attachedFiles.addAll(newAttachedFiles);
 
-       // Update the attached files list in the Dossier entity
-       dossier.setAttachedFiles(attachedFiles);
+        // Update the attached files list in the Dossier entity
+        dossier.setAttachedFiles(attachedFiles);
 
-       return dossierRepository.save(dossier);
-   }
+        return dossierRepository.save(dossier);
+    }
 
     @Override
     public Long getSingleAgenceIdByParticulierId(Long particulierId) {
@@ -252,9 +252,9 @@ public class DossierServiceImpl implements DossierService {
         }
 
         return null;
-}
+    }
 
-///////////////////queries
+    ///////////////////queries
     @Override
     public List<Agence> findAgencesByCommuneId(Long communeId) {
         String jpql = "SELECT a FROM Agence a JOIN a.communes c WHERE c.id = :communeId";
@@ -277,7 +277,7 @@ public class DossierServiceImpl implements DossierService {
                 "JOIN c.agences a " +
 
                 "WHERE p.id = :idParticulier "
-               ; // Ordonne par l'ID de l'Agence pour obtenir la première
+                ; // Ordonne par l'ID de l'Agence pour obtenir la première
 
 
         Query query = entityManager.createQuery(jpql);
@@ -462,35 +462,35 @@ public class DossierServiceImpl implements DossierService {
 
 
     ///////////////////////delete file by file name and id dossier/////////////////
-public boolean deleteFileByDossierIdAndFileName(Long dossierId, String fileName) {
-    Optional<Dossier> optionalDossier = dossierRepository.findById(dossierId);
+    public boolean deleteFileByDossierIdAndFileName(Long dossierId, String fileName) {
+        Optional<Dossier> optionalDossier = dossierRepository.findById(dossierId);
 
-    if (optionalDossier.isPresent()) {
-        Dossier dossier = optionalDossier.get();
-        List<AttachedFile> attachedFiles = dossier.getAttachedFiles();
-        AttachedFile fileToDelete = null;
+        if (optionalDossier.isPresent()) {
+            Dossier dossier = optionalDossier.get();
+            List<AttachedFile> attachedFiles = dossier.getAttachedFiles();
+            AttachedFile fileToDelete = null;
 
-        for (AttachedFile file : attachedFiles) {
-            if (file.getFileName().equals(fileName)) {
-                fileToDelete = file;
-                break;
+            for (AttachedFile file : attachedFiles) {
+                if (file.getFileName().equals(fileName)) {
+                    fileToDelete = file;
+                    break;
+                }
             }
-        }
 
-        if (fileToDelete != null) {
-            attachedFiles.remove(fileToDelete);
-            dossierRepository.save(dossier);
-            // Optionally, perform other operations like deleting the file from storage
-            return true; // File deleted successfully
+            if (fileToDelete != null) {
+                attachedFiles.remove(fileToDelete);
+                dossierRepository.save(dossier);
+                // Optionally, perform other operations like deleting the file from storage
+                return true; // File deleted successfully
+            } else {
+                // Handle case: File not found in the dossier
+                return false; // File not found in dossier's attached files
+            }
         } else {
-            // Handle case: File not found in the dossier
-            return false; // File not found in dossier's attached files
+            // Handle case: Dossier not found
+            return false; // Dossier not found with the given ID
         }
-    } else {
-        // Handle case: Dossier not found
-        return false; // Dossier not found with the given ID
     }
-}
 
 
     /////////////////////////////////
@@ -651,10 +651,5 @@ public boolean deleteFileByDossierIdAndFileName(Long dossierId, String fileName)
         }
     }
 
-    public class InvalidFileException extends RuntimeException {
-        public InvalidFileException(String message) {
-            super(message);
-        }
-    }
 
 }

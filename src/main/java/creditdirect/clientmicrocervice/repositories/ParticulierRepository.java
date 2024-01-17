@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ParticulierRepository extends JpaRepository<Particulier, Long> {
+    Particulier findByEmail(String recipientEmail);
     // Additional custom queries can be added here if needed
 }
