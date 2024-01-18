@@ -249,29 +249,31 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public Particulier subscribeParticulier(Particulier particulier) {
-        String generatedPassword = generateRandomPassword();
-        System.out.println("generated password: " + generatedPassword);
+        try {
+            // Check if the email already exists
+            if (clientRepository.existsByEmail(particulier.getEmail())) {
+                System.out.println("Email already exists: " + particulier.getEmail());
+                throw new RuntimeException("Email already exists");
+            }
 
-        String hashedPassword = passwordEncoder.encode(generatedPassword);
-        particulier.setPassword(hashedPassword);
+            String generatedPassword = generateRandomPassword();
+            System.out.println("Generated password: " + generatedPassword);
 
-        // Save the Particulier first
-        Particulier subscribedParticulier = particulierRepository.save(particulier);
+            String hashedPassword = passwordEncoder.encode(generatedPassword);
+            particulier.setPassword(hashedPassword);
 
-        emailService.sendConfirmationEmail(subscribedParticulier.getEmail(), generatedPassword);
+            // Save the Particulier first
+            Particulier subscribedParticulier = particulierRepository.save(particulier);
 
-        // Retrieve Commune based on postal code
-        String postalCode = particulier.getCodePostal(); // Assuming you have a method to get postal code from Particulier
-        Commune commune = communeRepository.findByCodePostal(postalCode);
-        System.out.println("postalCode postalCode: " + postalCode);
+            // Simulate email confirmation (replace with your actual email sending logic)
+            System.out.println("Sending confirmation email to: " + subscribedParticulier.getEmail());
 
-        if (commune != null) {
-            subscribedParticulier.setCommune(commune); // Associate Particulier with Commune
-            particulierRepository.save(subscribedParticulier);
-            return subscribedParticulier; // Save and return the updated Particulier
-        } else {
-            // Handle scenario when Commune is not found for the provided postal code
-            return null;
+            return subscribedParticulier;
+        } catch (RuntimeException e) {
+            throw e; // Re-throw the exception to be handled globally or customize the response here
+        } catch (Exception e) {
+            // Handle other exceptions if necessary
+            throw new RuntimeException("Internal server error", e);
         }
     }
 

@@ -108,12 +108,23 @@ public class ClientController {
 
     //////////////////inscription particulier///////////////////////////
     @PostMapping("/subscribe/particulier")
-    public ResponseEntity<Particulier> subscribeParticulier(@RequestBody Particulier particulier) {
-        Particulier subscribedParticulier = clientService.subscribeParticulier(particulier);
-        return new ResponseEntity<>(subscribedParticulier, HttpStatus.CREATED);
+    public ResponseEntity<Object> subscribeParticulier(@RequestBody Particulier particulier) {
+        try {
+            Particulier subscribedParticulier = clientService.subscribeParticulier(particulier);
+            return new ResponseEntity<>(subscribedParticulier, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            // Handle the specific case where the email already exists
+            if (e.getMessage().equals("Email already exists")) {
+                return new ResponseEntity<>("Email already exists", HttpStatus.BAD_REQUEST);
+            }
+
+            // Handle other runtime exceptions if necessary
+            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            // Handle other exceptions if necessary
+            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-
-
     ///////////////////updaate client password/////////////////////////
     @PutMapping("/addpassword")
     public ResponseEntity<String> updateClientPassword(@RequestParam Long id, @RequestBody Map<String, String> requestBody) {
