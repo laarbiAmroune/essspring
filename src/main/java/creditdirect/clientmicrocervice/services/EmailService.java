@@ -44,17 +44,33 @@ public class EmailService {
                     + "<title>Confirmation d'inscription</title>"
                     + "<style>"
                     + "body { font-family: Arial, sans-serif; }"
+
+                    + ".buttontext { color: #fff; }"
                     + "h2 { color: #0056b3; }"
                     + "p { color: #333; }"
-                    + ".btn { display: inline-block; padding: 10px 20px; background-color: #0056b3; color: #fff; text-decoration: none; border: none; border-radius: 5px; cursor: pointer; }"
+                    +  " h1 { color: #742484; }"
+                    + ".btn  .btn { \n" +
+                    "            display: inline-block; \n" +
+                    "            padding: 10px 20px; \n" +
+                    "            width: 90%; \n" +
+                    "            max-width: 200px; \n" +
+                    "            background-color: #742484; \n" +
+                    "            color: white; \n" +
+                    "            text-decoration: none; \n" +
+                    "            border: none; \n" +
+                    "            border-radius: 15px; \n" +
+                    "            box-shadow: 0px -12px 16px 8px rgba(0, 0, 0, 0.25) inset; \n" +
+                    "            cursor: pointer; \n" +
+                    "        }"
                     + ".btn:hover { background-color: #004080; }"  // Optional: Add hover effect
                     + "</style>"
                     + "</head>"
                     + "<body>"
                     + "<h2>Merci de votre inscription !</h2>"
-                    + "<p>Votre mot de passe est : <strong>" + password + "</strong></p>"
-                    + "<p><button class='btn' onclick=\"window.location.href='" + activationUrl + "'\">Activer votre compte</button></p>"
-                    + "<p><a href='" + activationUrl + "' class='btn'>activate your compte</a></p>"
+                    +"  <h1>Bienvenu chez CreditDirect</h1> "
+                    + "<p class:'buttontext'>Votre mot de passe est : <strong>" + password + "</strong></p>"
+
+                    + "<h3>clicker ici pour <a href='" + activationUrl + "' class='btn'>activer votre  compte</a></h3>"
                     + "</body></html>";
 
 

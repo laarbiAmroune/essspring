@@ -323,6 +323,7 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public String sendConfirmationEmail(String recipientEmail) {
         // Retrieve existing Client entity from the database
+    System.out.print(recipientEmail+"recipientEmail");
         Client existingClient = clientRepository.findByEmail(recipientEmail);
 
         if (existingClient == null) {

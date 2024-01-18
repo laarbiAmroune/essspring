@@ -9,8 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -26,7 +25,7 @@ public class ClientController {
     private final ClientService clientService;
     private final EmailService emailService;
 
-    private final AuthenticationManager authManager;
+
     private final EncryptionService encryptionService;
 
     /////////////////get all client////////////////////////////
@@ -60,32 +59,28 @@ public class ClientController {
     ////////////////////////client login/////////////////////////
     @PostMapping("/login")
     public ResponseEntity<?> loginWithClientInfo(@RequestBody Map<String, String> credentials) {
-
         String email = credentials.get("email");
         String password = credentials.get("password");
 
         if (email == null || password == null) {
             return new ResponseEntity<>("Email or password missing", HttpStatus.BAD_REQUEST);
         }
+
         try {
-            authManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+            // Replace the following line with your actual authentication logic
+            Map<String, Object> authenticationResult = clientService.loginWithClientInfo(email, password);
 
-        } catch (Exception e) {
-            log.error("echec de connexion 1");
-            log.error(e.getMessage());
-            try {
-                clientService.getClientFromRemote(email, password);
-            } catch (Exception ex) {
-
-                log.error("echec de connexion 2");
-                log.error(ex.getMessage());
-                return new ResponseEntity<>("Authentication failed", HttpStatus.UNAUTHORIZED);
+            if (authenticationResult.containsKey("error")) {
+                // Authentication failed
+                return new ResponseEntity<>(authenticationResult.get("error"), HttpStatus.UNAUTHORIZED);
+            } else {
+                // Authentication succeeded
+                return ResponseEntity.ok(authenticationResult);
             }
+        } catch (RuntimeException e) {
+            log.error("Authentication failed: " + e.getMessage());
+            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        Map<String, Object> authenticationResult = clientService.loginWithClientInfo(email, password);
-        return ResponseEntity.ok(authenticationResult);
-
     }
 
     ////////////encien loginnn
@@ -278,7 +273,9 @@ public class ClientController {
 ///////////////envoyer un email de confirmation///////////////////////
 
     @PostMapping("/send-confirmation-email")
-    public String sendConfirmationEmail(@RequestParam("email") String recipientEmail) {
+    public String sendConfirmationEmail(@RequestBody Map<String, String> requestBody) {
+        String recipientEmail = requestBody.get("recipientEmail");
         return clientService.sendConfirmationEmail(recipientEmail);
     }
+
 }

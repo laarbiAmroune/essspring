@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +23,7 @@ public class CompteController {
     @Autowired
     private CompteService compteService;
 
-    private final AuthenticationManager authManager;
+
 
 
     @GetMapping
@@ -58,7 +58,7 @@ public class CompteController {
         String password = credentials.get("password");
 
         try {
-            authManager.authenticate(new UsernamePasswordAuthenticationToken(nin, password));
+
             String signedInToken = compteService.signInByNin(nin, password);
             Compte createdCompte = compteService.findByNin(nin);
             Map<String, Object> response = new HashMap<>();
