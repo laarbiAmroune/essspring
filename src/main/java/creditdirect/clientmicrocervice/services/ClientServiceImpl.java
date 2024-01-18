@@ -245,8 +245,6 @@ public class ClientServiceImpl implements ClientService {
 
         return subscribedParticulier;
     }*/
-
-
     @Override
     public Particulier subscribeParticulier(Particulier particulier) {
         try {
