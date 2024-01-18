@@ -25,7 +25,6 @@ public class ClientController {
     private final ClientService clientService;
     private final EmailService emailService;
 
-
     private final EncryptionService encryptionService;
 
     /////////////////get all client////////////////////////////
@@ -67,6 +66,7 @@ public class ClientController {
         }
 
         try {
+
             // Replace the following line with your actual authentication logic
             Map<String, Object> authenticationResult = clientService.loginWithClientInfo(email, password);
 
@@ -80,6 +80,13 @@ public class ClientController {
         } catch (RuntimeException e) {
             log.error("Authentication failed: " + e.getMessage());
             return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+
+        } catch (Exception ex) {
+
+            log.error("echec de connexion 2");
+            log.error(ex.getMessage());
+            return new ResponseEntity<>("Authentication failed", HttpStatus.UNAUTHORIZED);
+
         }
     }
 

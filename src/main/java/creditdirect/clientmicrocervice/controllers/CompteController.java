@@ -7,12 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -68,16 +69,6 @@ public class CompteController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        /*String signedInToken = compteService.signInByNin(nin, password);
-        Compte createdCompte = compteService.findByNin(nin); // Assuming this method retrieves the account
 
-        if (signedInToken != null && createdCompte != null) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", signedInToken);
-            response.put("compte", createdCompte);
-            return ResponseEntity.ok(response); // Send token and account in response body as JSON
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }*/
     }
 }
