@@ -26,7 +26,7 @@ public class ClientController {
     private final ClientService clientService;
     private final EmailService emailService;
 
-    private final AuthenticationManager authManager;
+    //private final AuthenticationManager authManager;
     private final EncryptionService encryptionService;
 
     /////////////////get all client////////////////////////////
@@ -68,19 +68,12 @@ public class ClientController {
             return new ResponseEntity<>("Email or password missing", HttpStatus.BAD_REQUEST);
         }
         try {
-            authManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+            clientService.getClientFromRemote(email, password);
+        } catch (Exception ex) {
 
-        } catch (Exception e) {
-            log.error("echec de connexion 1");
-            log.error(e.getMessage());
-            try {
-                clientService.getClientFromRemote(email, password);
-            } catch (Exception ex) {
-
-                log.error("echec de connexion 2");
-                log.error(ex.getMessage());
-                return new ResponseEntity<>("Authentication failed", HttpStatus.UNAUTHORIZED);
-            }
+            log.error("echec de connexion 2");
+            log.error(ex.getMessage());
+            return new ResponseEntity<>("Authentication failed", HttpStatus.UNAUTHORIZED);
         }
 
         Map<String, Object> authenticationResult = clientService.loginWithClientInfo(email, password);

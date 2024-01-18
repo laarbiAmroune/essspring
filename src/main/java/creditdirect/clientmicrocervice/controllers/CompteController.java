@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -58,7 +59,7 @@ public class CompteController {
         String password = credentials.get("password");
 
         try {
-            authManager.authenticate(new UsernamePasswordAuthenticationToken(nin, password));
+           // authManager.authenticate(new UsernamePasswordAuthenticationToken(nin, password));
             String signedInToken = compteService.signInByNin(nin, password);
             Compte createdCompte = compteService.findByNin(nin);
             Map<String, Object> response = new HashMap<>();
@@ -68,16 +69,6 @@ public class CompteController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        /*String signedInToken = compteService.signInByNin(nin, password);
-        Compte createdCompte = compteService.findByNin(nin); // Assuming this method retrieves the account
 
-        if (signedInToken != null && createdCompte != null) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", signedInToken);
-            response.put("compte", createdCompte);
-            return ResponseEntity.ok(response); // Send token and account in response body as JSON
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }*/
     }
 }

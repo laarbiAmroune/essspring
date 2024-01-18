@@ -9,8 +9,10 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import creditdirect.clientmicrocervice.entities.RoleType;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 
 @Component
@@ -58,14 +60,16 @@ public class JwtUtil {
         }
     }
 
-    public String extractRole(String token) {
+    public ArrayList<SimpleGrantedAuthority> extractRole(String token) {
+        ArrayList<SimpleGrantedAuthority> roles = new ArrayList<>();
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
             JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
-            return claimsSet.getStringClaim("role");
+            roles.add(new SimpleGrantedAuthority((String)claimsSet.getStringClaim("role")));
+            return roles;
         } catch (Exception e) {
             // Gérer les exceptions en cas d'erreur lors de l'extraction du rôle
-            return null;
+            return roles;
         }
     }
 }
